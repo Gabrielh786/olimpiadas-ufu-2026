@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Sparkles, Swords, Table2, Trophy, Users } from 'lucide-react';
 import type { AppState, BracketState, Group, TableState } from '../../types';
 import { GROUP_LABEL, MODALITIES, MODALITY_BY_CODE } from '../../data/modalities';
+import { emptyTable } from '../../lib/bracket';
 import { suggestRankingFromBracket, type Overview } from '../../lib/scoring';
 import { StatusBadge } from '../ui';
 import { BracketView } from './BracketView';
@@ -32,12 +33,13 @@ export function CompetitionsTab({ state, overview, selected, onSelect, setBracke
   const mod = MODALITY_BY_CODE[selected] ?? MODALITIES[0];
   const result = overview.results[mod.code];
 
-  const filters: { key: Filter; label: string; icon: typeof Trophy }[] = [
+  const allFilters: { key: Filter; label: string; icon: typeof Trophy }[] = [
     { key: 'all', label: 'Todas', icon: Trophy },
     { key: 'A', label: 'Mata-Mata 16', icon: Swords },
     { key: 'B', label: 'Mata-Mata 32 · Duplo Atleta', icon: Users },
     { key: 'C', label: 'Tabela de Ordem', icon: Table2 },
   ];
+  const filters = allFilters.filter((f) => f.key === 'all' || MODALITIES.some((m) => m.group === f.key));
   const list = useMemo(() => MODALITIES.filter((m) => filter === 'all' || m.group === filter), [filter]);
   const count = (f: Filter) => MODALITIES.filter((m) => f === 'all' || m.group === f).length;
   const statusCount = (s: string) => list.filter((m) => overview.results[m.code].status === s).length;
@@ -127,7 +129,7 @@ export function CompetitionsTab({ state, overview, selected, onSelect, setBracke
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
           <OrderTable
             mod={mod}
-            table={state.tables[mod.code]}
+            table={state.tables[mod.code] ?? emptyTable()}
             athletics={state.athletics}
             onChange={(t) => setTable(mod.code, t)}
             subtitle={

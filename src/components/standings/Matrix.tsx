@@ -87,7 +87,7 @@ export function Matrix({ rows, overview, onOpenAdjust, onOpenModality, readOnly 
               Matriz Geral de Auditoria · Mínimo e Máximo por Esporte
             </h3>
             <p className="mt-0.5 text-xs text-zinc-400">
-              Acompanhe a projeção exata de cada atlética em cada uma das 25 modalidades pontuáveis.
+              Acompanhe a projeção exata de cada atlética em cada uma das {MODALITIES.length} modalidades pontuáveis.
             </p>
           </div>
 
@@ -143,21 +143,23 @@ export function Matrix({ rows, overview, onOpenAdjust, onOpenModality, readOnly 
                   : 'border-line bg-ink-950 text-zinc-400 hover:border-bronze-hi hover:text-zinc-200'
               }`}
             >
-              Todas (25)
+              Todas ({MODALITIES.length})
             </button>
-            {(['A', 'B', 'C'] as const).map((g) => (
-              <button
-                key={g}
-                onClick={() => setGroupFilter(g)}
-                className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
-                  groupFilter === g
-                    ? 'border-brand/70 bg-brand/20 text-orange-200'
-                    : 'border-line bg-ink-950 text-zinc-400 hover:border-bronze-hi hover:text-zinc-200'
-                }`}
-              >
-                Grupo {g} ({MODALITIES.filter((m) => m.group === g).length})
-              </button>
-            ))}
+            {(['A', 'B', 'C'] as const)
+              .filter((g) => MODALITIES.some((m) => m.group === g))
+              .map((g) => (
+                <button
+                  key={g}
+                  onClick={() => setGroupFilter(g)}
+                  className={`rounded-lg border px-2.5 py-1 text-xs font-semibold transition ${
+                    groupFilter === g
+                      ? 'border-brand/70 bg-brand/20 text-orange-200'
+                      : 'border-line bg-ink-950 text-zinc-400 hover:border-bronze-hi hover:text-zinc-200'
+                  }`}
+                >
+                  Grupo {g} ({MODALITIES.filter((m) => m.group === g).length})
+                </button>
+              ))}
           </div>
 
           {/* Campo de Busca Rápida de Atlética */}
@@ -214,18 +216,20 @@ export function Matrix({ rows, overview, onOpenAdjust, onOpenModality, readOnly 
                 </th>
 
                 {groupFilter === 'all' ? (
-                  (['A', 'B', 'C'] as const).map((g) => {
-                    const count = MODALITIES.filter((m) => m.group === g).length;
-                    return (
-                      <th
-                        key={g}
-                        colSpan={count}
-                        className={`border-b border-r border-line px-2 py-1.5 text-center text-[10px] ${GROUP_CONFIG[g].badge}`}
-                      >
-                        {GROUP_CONFIG[g].label}
-                      </th>
-                    );
-                  })
+                  (['A', 'B', 'C'] as const)
+                    .filter((g) => MODALITIES.some((m) => m.group === g))
+                    .map((g) => {
+                      const count = MODALITIES.filter((m) => m.group === g).length;
+                      return (
+                        <th
+                          key={g}
+                          colSpan={count}
+                          className={`border-b border-r border-line px-2 py-1.5 text-center text-[10px] ${GROUP_CONFIG[g].badge}`}
+                        >
+                          {GROUP_CONFIG[g].label}
+                        </th>
+                      );
+                    })
                 ) : (
                   <th
                     colSpan={displayedModalities.length}

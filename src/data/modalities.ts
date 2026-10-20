@@ -34,7 +34,7 @@ const m = (
 });
 
 // ============================================================================
-// As 25 categorias/modalidades pontuáveis oficiais da Olimpíada UFU 2026
+// As 27 categorias/modalidades pontuáveis oficiais da Olimpíada UFU 2026
 // ============================================================================
 export const MODALITIES: Modality[] = [
   // ---------------- GRUPO A: Modalidades Coletivas com Chaveamento Oficial UFU 2026 ----------------
@@ -55,11 +55,16 @@ export const MODALITIES: Modality[] = [
   m('TCM', 'Tênis de Campo Masculino', 'Tênis de Campo', '🎾', 'A', except('aplicada', 'moca', 'psicologia'), false, 'none'),
   m('TCF', 'Tênis de Campo Feminino', 'Tênis de Campo', '🎾', 'A', except('moca'), false, 'none'),
 
-  // ---------------- GRUPO B: E-Sports (Mata-Mata 32 vagas com até 2 atletas por atlética) ----------------
-  m('ESM', 'E-Sports / EA FC Masculino', 'E-Sports', '🎮', 'B', ALL),
-  m('ESF', 'E-Sports / EA FC Feminino', 'E-Sports', '🎮', 'B', ALL),
+  // ---------------- GRUPO C: Modalidades de Tabela de Ordem / Pontuação Final ----------------
+  // Tênis de Mesa (15 atléticas inscritas — todas exceto Moca)
+  m('TMM', 'Tênis de Mesa Masculino', 'Tênis de Mesa', '🏓', 'C', except('moca')),
+  m('TMF', 'Tênis de Mesa Feminino', 'Tênis de Mesa', '🏓', 'C', except('moca')),
 
-  // ---------------- GRUPO C: Modalidades de Tabela / Pontuação Acumulada ----------------
+  // FIFA / E-Sports (Tabela de Ordem)
+  m('ESM', 'FIFA Masculino', 'FIFA / E-Sports', '🎮', 'C', ALL),
+  m('ESF', 'FIFA Feminino', 'FIFA / E-Sports', '🎮', 'C', ALL),
+
+  // Demais modalidades de Tabela de Ordem
   m('AM', 'Atletismo Masculino', 'Atletismo', '🏃', 'C', ALL),
   m('AF', 'Atletismo Feminino', 'Atletismo', '🏃', 'C', ALL),
   m('NM', 'Natação Masculino', 'Natação', '🏊', 'C', except('humanas')),
@@ -87,7 +92,7 @@ export const MODALITY_BY_CODE: Record<string, Modality> = Object.fromEntries(MOD
 
 export const GROUP_LABEL: Record<Group, string> = {
   A: 'Mata-Mata (Coletivos & Tênis)',
-  B: 'Mata-Mata 32 · E-Sports',
+  B: 'Mata-Mata 32 · Duplo Atleta',
   C: 'Tabela de Ordem',
 };
 

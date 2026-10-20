@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 import { ChevronDown, Info } from 'lucide-react';
+import { MODALITIES } from '../../data/modalities';
 import { fmt, type SortMetric, type StandingRow } from '../../lib/scoring';
 import { AthleticBadge } from '../ui';
 
@@ -40,7 +41,7 @@ export function StandingsCard({ rows, definedCount, metric, showBars, presentati
           Classificação geral <span className="text-brand">parcial</span>
         </h2>
         <p className="mt-1 text-xs text-zinc-400 sm:text-sm">
-          <b className="font-semibold text-zinc-200">{definedCount}</b> de 25 modalidades pontuáveis definidas
+          <b className="font-semibold text-zinc-200">{definedCount}</b> de {MODALITIES.length} modalidades pontuáveis definidas
         </p>
       </div>
 

@@ -11,6 +11,7 @@ import {
   X,
 } from 'lucide-react';
 import type { SortMetric, StandingRow, Overview } from '../../lib/scoring';
+import { MODALITIES } from '../../data/modalities';
 import { sortRows } from '../../lib/scoring';
 import { StandingsCard } from './StandingsCard';
 import { Matrix } from './Matrix';
@@ -65,7 +66,7 @@ export function StandingsTab({ rows, overview, onOpenAdjust, onOpenModality, rea
               }`}
             >
               <Grid3x3 size={14} />
-              <span>Matriz 25</span>
+              <span>Matriz {MODALITIES.length}</span>
             </button>
             <button
               onClick={() => setSubView('both')}

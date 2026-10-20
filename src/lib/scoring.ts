@@ -5,6 +5,7 @@ import { MODALITIES, POINTS, placeFromPoints } from '../data/modalities.ts';
 import type { AppState, Athletic, BracketState, Modality, ModalityStatus, Score, TableState } from '../types.ts';
 import {
   competitorResult,
+  emptyTable,
   isBracketDefined,
   isReal,
   resolveBracket,
@@ -162,7 +163,7 @@ function bracketModality(mod: Modality, b: BracketState, athletics: Athletic[]):
 
 export function computeModality(mod: Modality, state: AppState): ModalityResult {
   if (mod.group === 'C') {
-    const t = tableScores(mod, state.tables[mod.code], state.athletics);
+    const t = tableScores(mod, state.tables[mod.code] ?? emptyTable(), state.athletics);
     return { modality: mod, ...t };
   }
   return bracketModality(mod, state.brackets[mod.code], state.athletics);

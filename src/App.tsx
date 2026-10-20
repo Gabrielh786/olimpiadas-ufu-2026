@@ -18,6 +18,7 @@ import {
 import { useAppState } from './hooks/useAppState';
 import { useAuth } from './hooks/useAuth';
 import { useTheme } from './hooks/useTheme';
+import { MODALITIES } from './data/modalities';
 import { computeOverview } from './lib/scoring';
 import { exportCSV, exportJSON, sanitizeState } from './lib/storage';
 import { CompetitionsTab } from './components/competitions/CompetitionsTab';
@@ -283,7 +284,7 @@ export function App() {
                 <span>🏆</span>
                 Competições
                 <span className="rounded-full bg-ink-950 px-1.5 py-0.2 text-[10px] font-mono text-zinc-400">
-                  25
+                  {MODALITIES.length}
                 </span>
               </button>
             </nav>
@@ -293,7 +294,7 @@ export function App() {
               <div className="flex items-center gap-2 rounded-full border border-bronze-hi/60 bg-ink-950 px-3 py-1 text-zinc-300">
                 <span className="h-2 w-2 rounded-full bg-brand animate-pulse" />
                 <span>
-                  <strong className="font-mono text-orange-400">{overview.definedCount}</strong> de 25 modalidades definidas
+                  <strong className="font-mono text-orange-400">{overview.definedCount}</strong> de {MODALITIES.length} modalidades definidas
                 </span>
               </div>
 

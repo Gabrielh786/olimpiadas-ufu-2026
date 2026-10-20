@@ -21,9 +21,9 @@ const row = (o: ReturnType<typeof computeOverview>, id: string) => {
   const r = o.rows.find((x) => x.athletic.id === id)!;
   return [r.min, r.max, r.avg];
 };
-eq('Engenharia inicial', row(o0, 'engenharia'), [0, 325, 162.5]);
+eq('Engenharia inicial', row(o0, 'engenharia'), [0, 351, 175.5]);
 // Agrárias tem BYE oficial no TCM, garantindo quartas (mín = 2)
-eq('Agrárias inicial (com BYE no TCM)', row(o0, 'agrarias'), [2, 312, 157]);
+eq('Agrárias inicial (com BYE no TCM)', row(o0, 'agrarias'), [2, 338, 170]);
 eq('Moca inicial', row(o0, 'moca'), [0, 182, 91]);
 eq('Definidas inicial', o0.definedCount, 0);
 
@@ -154,13 +154,14 @@ bhm = normalizeBracket(bhm, true);
 eq('BYE nas oitavas garante 2/13', sc(bhm, hm.enrolled[0], 'HM'), [2, 13]);
 eq('N/I no HM (artes)', sc(bhm, 'artes', 'HM'), [0, 0]);
 
-// ---------- 6. Grupo B: dois representantes na final ----------
-const left = ['engenharia:1', ...Array(15).fill(BYE)];
-const right = ['engenharia:2', ...Array(15).fill(BYE)];
-let bb: BracketState = normalizeBracket({ ...s0.brackets.ESM, slots: [...left, ...right] });
-eq('ESM ambos na final -> 13/13', sc(bb, 'engenharia', 'ESM'), [13, 13]);
-bb = normalizeBracket({ ...s0.brackets.ESM, slots: [...left, ...Array(16).fill(null)] });
-eq('ESM rep1 na final, rep2 aguardando', sc(bb, 'engenharia', 'ESM'), [10, 13]);
+// ---------- 6. Tênis de Mesa (TMM / TMF) e FIFA (ESM / ESF) em Tabela de Ordem ----------
+const tmm0 = computeModality(MODALITY_BY_CODE.TMM, s0).scores;
+eq('TMM: Moca N/I', [tmm0.moca.min, tmm0.moca.max, tmm0.moca.enrolled], [0, 0, false]);
+eq('TMM: Engenharia inscrita', [tmm0.engenharia.min, tmm0.engenharia.max, tmm0.engenharia.enrolled], [0, 13, true]);
+const esm0 = computeModality(MODALITY_BY_CODE.ESM, s0).scores;
+eq('ESM (FIFA Masc): Tabela de Ordem', [esm0.engenharia.min, esm0.engenharia.max, MODALITY_BY_CODE.ESM.group], [0, 13, 'C']);
+const esf0 = computeModality(MODALITY_BY_CODE.ESF, s0).scores;
+eq('ESF (FIFA Fem): Tabela de Ordem', [esf0.moca.min, esf0.moca.max, MODALITY_BY_CODE.ESF.group], [0, 13, 'C']);
 
 // ---------- 7. Grupo C ----------
 const sC: AppState = {
