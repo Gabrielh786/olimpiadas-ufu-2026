@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Lock, LogIn, ShieldCheck, Sun, Moon, Trophy, User } from 'lucide-react';
 
 interface Props {
-  onLogin: (username: string, password: string) => { ok: boolean; error?: string };
+  onLogin: (username: string, password: string) => Promise<{ ok: boolean; error?: string }> | { ok: boolean; error?: string };
   isDark: boolean;
   onToggleTheme: () => void;
 }
@@ -12,13 +12,21 @@ export function LoginScreen({ onLogin, isDark, onToggleTheme }: Props) {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const res = onLogin(username, password);
-    if (!res.ok) {
-      setError(res.error ?? 'Credenciais inválidas.');
+    setLoading(true);
+    try {
+      const res = await onLogin(username, password);
+      if (!res.ok) {
+        setError(res.error ?? 'Credenciais inválidas.');
+      }
+    } catch {
+      setError('Erro ao validar credenciais.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,10 +143,11 @@ export function LoginScreen({ onLogin, isDark, onToggleTheme }: Props) {
 
             <button
               type="submit"
-              className="btn-brand flex w-full items-center justify-center gap-2 py-2.5 text-sm font-bold shadow-lg"
+              disabled={loading}
+              className="btn-brand flex w-full items-center justify-center gap-2 py-2.5 text-sm font-bold shadow-lg disabled:opacity-50"
             >
               <LogIn size={16} />
-              <span>Entrar no Sistema</span>
+              <span>{loading ? 'Verificando...' : 'Entrar no Sistema'}</span>
             </button>
           </form>
 
