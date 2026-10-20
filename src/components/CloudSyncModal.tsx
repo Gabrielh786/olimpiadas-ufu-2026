@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Cloud, CheckCircle2, RefreshCw, Unlink } from 'lucide-react';
 import { Modal } from './ui';
 
@@ -23,6 +23,10 @@ export function CloudSyncModal({
 }: Props) {
   const [inputUrl, setInputUrl] = useState(cloudUrl);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) setInputUrl(cloudUrl);
+  }, [open, cloudUrl]);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -5,15 +5,20 @@ import { MODALITY_BY_CODE } from '../data/modalities';
 import { loadState, sanitizeState, saveState } from '../lib/storage';
 
 const CLOUD_URL_KEY = 'olimpiada_ufu_2026_cloud_url';
+export const DEFAULT_CLOUD_URL = 'https://olimpiadas-ufu-default-rtdb.firebaseio.com';
 
 export function getCloudDbUrl(): string {
   const envUrl = import.meta.env.VITE_CLOUD_DB_URL as string | undefined;
   if (envUrl && envUrl.trim()) return envUrl.trim().replace(/\/+$/, '');
   try {
-    return (localStorage.getItem(CLOUD_URL_KEY) ?? '').trim().replace(/\/+$/, '');
+    const saved = localStorage.getItem(CLOUD_URL_KEY);
+    if (saved !== null) {
+      return saved.trim().replace(/\/+$/, '');
+    }
   } catch {
-    return '';
+    // ignore
   }
+  return DEFAULT_CLOUD_URL;
 }
 
 export function setCloudDbUrl(url: string) {
