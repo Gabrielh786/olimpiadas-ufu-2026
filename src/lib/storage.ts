@@ -33,15 +33,45 @@ export function defaultState(): AppState {
 }
 
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x);
-const str = (x: unknown): string | null => (typeof x === 'string' ? x : null);
+const str = (x: unknown): string | null => (typeof x === 'string' && x.length > 0 ? x : null);
+const hasIndexable = (x: unknown): boolean => Array.isArray(x) || isObj(x);
+const atIdx = (x: unknown, i: number): unknown => {
+  if (Array.isArray(x)) return x[i];
+  if (isObj(x)) return x[String(i)];
+  return undefined;
+};
+const toList = (x: unknown): unknown[] => {
+  if (Array.isArray(x)) return x;
+  if (isObj(x)) return Object.values(x);
+  return [];
+};
+
+/**
+ * Converte recursivamente `null` em `""` antes de enviar ao Firebase Realtime Database.
+ * O Firebase apaga chaves com valor `null` e transforma arrays esparsos (ex.: com poucos jogos
+ * preenchidos) em objetos `{"0": ..., "4": ...}`. Ao gravar `""`, todos os arrays permanecem
+ * íntegros como JSON Arrays densos, e `sanitizeState` converte `""` de volta para `null`.
+ */
+export function encodeForCloud(value: unknown): unknown {
+  if (value === null || value === undefined) return '';
+  if (Array.isArray(value)) return value.map(encodeForCloud);
+  if (isObj(value)) {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = encodeForCloud(v);
+    }
+    return out;
+  }
+  return value;
+}
 
 function sanitizeTable(raw: unknown, enrolled: string[]): TableState {
   const t = emptyTable();
   if (!isObj(raw)) return t;
   const used = new Set<string>();
-  if (Array.isArray(raw.positions))
+  if (hasIndexable(raw.positions))
     for (let i = 0; i < 8; i++) {
-      const v = str(raw.positions[i]);
+      const v = str(atIdx(raw.positions, i));
       if (v && enrolled.includes(v) && !used.has(v)) {
         t.positions[i] = v;
         used.add(v);
@@ -51,13 +81,13 @@ function sanitizeTable(raw: unknown, enrolled: string[]): TableState {
   return t;
 }
 
-/** Valida e completa qualquer estado (localStorage antigo ou arquivo importado). */
+/** Valida e completa qualquer estado (localStorage antigo, Firebase esparso ou arquivo importado). */
 export function sanitizeState(raw: unknown): AppState {
   const base = defaultState();
   if (!isObj(raw)) return base;
 
   // Atléticas: mantém as 16 oficiais, preservando personalizações
-  const rawAth = Array.isArray(raw.athletics) ? raw.athletics : [];
+  const rawAth = toList(raw.athletics);
   const athletics: Athletic[] = base.athletics.map((def) => {
     const found = rawAth.find((x) => isObj(x) && x.id === def.id) as Record<string, unknown> | undefined;
     if (!found) return def;
@@ -88,9 +118,9 @@ export function sanitizeState(raw: unknown): AppState {
     const rb = rawBr[m.code];
     if (isObj(rb)) {
       const used = new Set<string>();
-      if (Array.isArray(rb.slots))
+      if (hasIndexable(rb.slots)) {
         for (let i = 0; i < size; i++) {
-          const v = str(rb.slots[i]);
+          const v = str(atIdx(rb.slots, i));
           if (!v) continue;
           if (v === BYE || (v === NONE && m.group === 'B') || isLoserSlot(v)) {
             b.slots[i] = v;
@@ -105,13 +135,18 @@ export function sanitizeState(raw: unknown): AppState {
             used.add(v);
           }
         }
-      if (Array.isArray(rb.winners))
-        b.winners = b.winners.map((round, r) =>
-          round.map((_, i) => (Array.isArray(rb.winners) && Array.isArray(rb.winners[r]) ? str((rb.winners[r] as unknown[])[i]) : null)),
-        );
+      } else {
+        const official = getOfficialBracket2026(m.code);
+        if (official) b.slots = [...official.slots];
+      }
+      if (hasIndexable(rb.winners))
+        b.winners = b.winners.map((round, r) => {
+          const roundRaw = atIdx(rb.winners, r);
+          return round.map((_, i) => (hasIndexable(roundRaw) ? str(atIdx(roundRaw, i)) : null));
+        });
       b.thirdWinner = str(rb.thirdWinner);
-      if (Array.isArray(rb.consolationWinners)) {
-        b.consolationWinners = [str(rb.consolationWinners[0]), str(rb.consolationWinners[1])];
+      if (hasIndexable(rb.consolationWinners)) {
+        b.consolationWinners = [str(atIdx(rb.consolationWinners, 0)), str(atIdx(rb.consolationWinners, 1))];
       }
       b.fifthWinner = str(rb.fifthWinner);
       b.seventhWinner = str(rb.seventhWinner);
@@ -127,17 +162,16 @@ export function sanitizeState(raw: unknown): AppState {
     brackets[m.code] = normalizeBracket(b, m.hasConsolationBracket ?? false);
   }
 
-  const adjustments: Adjustment[] = Array.isArray(raw.adjustments)
-    ? raw.adjustments
-        .filter((x): x is Record<string, unknown> => isObj(x))
-        .filter((x) => athletics.some((a) => a.id === x.athleticId) && typeof x.value === 'number' && Number.isFinite(x.value))
-        .map((x) => ({
-          id: str(x.id) ?? crypto.randomUUID(),
-          athleticId: x.athleticId as string,
-          value: Math.round(x.value as number),
-          reason: (str(x.reason) ?? 'Ajuste').slice(0, 80),
-        }))
-    : [];
+  const rawAdj = toList(raw.adjustments);
+  const adjustments: Adjustment[] = rawAdj
+    .filter((x): x is Record<string, unknown> => isObj(x))
+    .filter((x) => athletics.some((a) => a.id === x.athleticId) && typeof x.value === 'number' && Number.isFinite(x.value))
+    .map((x) => ({
+      id: str(x.id) ?? crypto.randomUUID(),
+      athleticId: x.athleticId as string,
+      value: Math.round(x.value as number),
+      reason: (str(x.reason) ?? 'Ajuste').slice(0, 80),
+    }));
 
   return { version: 1, athletics, brackets, tables, adjustments, updatedAt: str(raw.updatedAt) ?? base.updatedAt };
 }

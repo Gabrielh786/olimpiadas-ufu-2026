@@ -5,7 +5,7 @@ import { BYE } from '../src/types.ts';
 import type { AppState, BracketState } from '../src/types.ts';
 import { normalizeBracket, resolveBracket } from '../src/lib/bracket.ts';
 import { computeModality, computeOverview } from '../src/lib/scoring.ts';
-import { defaultState } from '../src/lib/storage.ts';
+import { defaultState, encodeForCloud, sanitizeState } from '../src/lib/storage.ts';
 
 let fails = 0;
 const eq = (label: string, got: unknown, exp: unknown) => {
@@ -175,6 +175,48 @@ sC.tables.AM = { ...sC.tables.AM, finalized: true };
 const am2 = computeModality(MODALITY_BY_CODE.AM, sC);
 eq('AM finalizada -> demais 0/0', [am2.scores.educa.min, am2.scores.educa.max], [0, 0]);
 eq('AM status definida', am2.status, 'defined');
+
+// ---------- 8. Compatibilidade Firebase (Objetos esparsos e encodeForCloud) ----------
+const firebaseSparse = {
+  ...s0,
+  brackets: {
+    ...s0.brackets,
+    BM: {
+      slots: s0.brackets.BM.slots,
+      winners: [{ '0': 'engenharia', '4': 'educa', '7': 'monetaria' }],
+      consolationWinners: { '1': 'artes' },
+    },
+  },
+  tables: {
+    ...s0.tables,
+    TMM: { positions: { '0': 'engenharia', '3': 'medicina' }, finalized: false },
+  },
+};
+const recovered = sanitizeState(firebaseSparse);
+eq('Firebase esparso BM winners[0]', recovered.brackets.BM.winners[0], [
+  'engenharia',
+  null,
+  null,
+  null,
+  'educa',
+  null,
+  null,
+  'monetaria',
+]);
+eq('Firebase esparso TMM positions', recovered.tables.TMM.positions, [
+  'engenharia',
+  null,
+  null,
+  'medicina',
+  null,
+  null,
+  null,
+  null,
+]);
+const encoded = encodeForCloud(recovered);
+const roundtripped = sanitizeState(JSON.parse(JSON.stringify(encoded)));
+eq('encodeForCloud roundtrip BM winners[0]', roundtripped.brackets.BM.winners[0], recovered.brackets.BM.winners[0]);
+eq('encodeForCloud roundtrip TMM positions', roundtripped.tables.TMM.positions, recovered.tables.TMM.positions);
 
 console.log(fails ? `\n${fails} falha(s)` : '\nTodos os cálculos conferem ✅');
 process.exit(fails ? 1 : 0);

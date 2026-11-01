@@ -32,6 +32,7 @@ import { Toasts, type ToastMsg } from './components/ui';
 type ActiveTab = 'competitions' | 'standings';
 
 export function App() {
+  const { role, isAdmin, isReadOnly, login, logout } = useAuth();
   const {
     state,
     update,
@@ -43,8 +44,8 @@ export function App() {
     cloudStatus,
     updateCloudUrl,
     pullFromCloud,
-  } = useAppState();
-  const { role, isAdmin, isReadOnly, login, logout } = useAuth();
+    forcePushToCloud,
+  } = useAppState(isAdmin);
   const { isDark, toggleTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<ActiveTab>('standings');
   const [selectedModality, setSelectedModality] = useState<string>('VM');
@@ -379,7 +380,8 @@ export function App() {
             cloudUrl={cloudUrl}
             cloudStatus={cloudStatus}
             onSaveUrl={updateCloudUrl}
-            onForceSync={() => pullFromCloud()}
+            onForcePush={() => forcePushToCloud()}
+            onForcePull={() => pullFromCloud(cloudUrl, true)}
             notify={notify}
           />
         </>
